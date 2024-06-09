@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev:server": "bun --watch src/server.ts",
-    "dev:client": "wait-port 2022 && bun --inspect --watch src/client.ts"
+    "dev:client": "wait-port 2022 && bun --watch src/client.ts"
   },
   "dependencies": {
     "@trpc/client": "npm:@trpc/client@next",

@@ -4,25 +4,19 @@ import {
   httpLink,
   splitLink,
   wsLink,
-} from '@trpc/client';
-import { WebSocket } from 'ws';
-import type { AppRouter } from './server';
+} from "@trpc/client";
+import { WebSocket } from "ws";
+import type { AppRouter } from "./server";
 
 globalThis.WebSocket = WebSocket as any;
-
-console.log('client');
 
 const wsClient = createWSClient({
   url: `ws://localhost:2022`,
   onOpen() {
-    console.log('ws connected');
+    console.log("ws connected");
   },
   onClose() {
-    console.log('ws disconnected');
-  },
-  retryDelayMs(attemptIndex) {
-    console.log('retrying in', attemptIndex);
-    return 1000 * attemptIndex;
+    console.log("ws disconnected");
   },
 });
 const trpc = createTRPCClient<AppRouter>({
@@ -30,7 +24,7 @@ const trpc = createTRPCClient<AppRouter>({
     // call subscriptions through websockets and the rest over http
     splitLink({
       condition(op) {
-        return op.type === 'subscription';
+        return op.type === "subscription";
       },
       true: wsLink({
         client: wsClient,
@@ -44,23 +38,23 @@ const trpc = createTRPCClient<AppRouter>({
 
 async function main() {
   const helloResponse = await trpc.greeting.hello.query({
-    name: 'world',
+    name: "world",
   });
 
-  console.log('helloResponse', helloResponse);
+  console.log("helloResponse", helloResponse);
 
   const createPostRes = await trpc.post.createPost.mutate({
-    title: 'hello world',
-    text: 'check out https://tRPC.io',
+    title: "hello world",
+    text: "check out https://tRPC.io",
   });
-  console.log('createPostResponse', createPostRes);
+  console.log("createPostResponse", createPostRes);
 
   let count = 0;
   await new Promise<void>((resolve) => {
     const subscription = trpc.post.randomNumber.subscribe(undefined, {
       onData(data) {
         // ^ note that `data` here is inferred
-        console.log('received', data);
+        console.log("received", data);
         count++;
         if (count > 3) {
           // stop after 3 pulls
@@ -69,20 +63,20 @@ async function main() {
         }
       },
       onStarted() {
-        console.log('subscription started');
+        console.log("subscription started");
       },
       onComplete() {
-        console.log('subscription completed');
+        console.log("subscription completed");
       },
       onStopped() {
-        console.log('subscription stopped');
+        console.log("subscription stopped");
       },
       onError(err) {
-        console.error('error', err);
+        console.error("error", err);
       },
     });
   });
-  console.log('done');
+  console.log("done");
   wsClient.close();
 }
 
