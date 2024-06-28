@@ -1,16 +1,13 @@
-import { initTRPC } from '@trpc/server';
-import type { CreateHTTPContextOptions } from '@trpc/server/adapters/standalone';
-import { createHTTPServer } from '@trpc/server/adapters/standalone';
-import type { CreateWSSContextFnOptions } from '@trpc/server/adapters/ws';
-import { applyWSSHandler } from '@trpc/server/adapters/ws';
-import { observable } from '@trpc/server/observable';
-import { WebSocketServer } from 'ws';
-import { z } from 'zod';
+import { logger } from "@bogeychan/elysia-logger";
+import { trpc } from "@elysiajs/trpc";
+import { initTRPC } from "@trpc/server";
+import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
+import { observable } from "@trpc/server/observable";
+import Elysia from "elysia";
+import { z } from "zod";
 
 // This is how you initialize a context for the server
-function createContext(
-  opts: CreateHTTPContextOptions | CreateWSSContextFnOptions,
-) {
+function createContext(opts: FetchCreateContextFnOptions) {
   return {};
 }
 type Context = Awaited<ReturnType<typeof createContext>>;
@@ -25,7 +22,7 @@ const greetingRouter = router({
     .input(
       z.object({
         name: z.string(),
-      }),
+      })
     )
     .query(({ input }) => `Hello, ${input.name}!`),
 });
@@ -36,7 +33,7 @@ const postRouter = router({
       z.object({
         title: z.string(),
         text: z.string(),
-      }),
+      })
     )
     .mutation(({ input }) => {
       // imagine db call here
@@ -67,21 +64,15 @@ const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-// http server
-const server = createHTTPServer({
-  router: appRouter,
-  createContext,
-});
-
-// ws server
-const wss = new WebSocketServer({ server });
-applyWSSHandler<AppRouter>({
-  wss,
-  router: appRouter,
-  createContext,
-});
-
-setInterval(() => {
-  console.log('Connected clients', wss.clients.size);
-}, 1000);
-server.listen(2022);
+export const app = new Elysia()
+  .use(logger())
+  .use(
+    trpc(appRouter, {
+      endpoint: "/",
+      // createContext: createContext,
+      onError: (err) => {
+        console.log(err);
+      },
+    })
+  )
+  .listen(2022);

@@ -19,6 +19,8 @@ const wsClient = createWSClient({
     console.log("ws disconnected");
   },
 });
+
+console.log("init trpc client");
 const trpc = createTRPCClient<AppRouter>({
   links: [
     // call subscriptions through websockets and the rest over http
@@ -35,8 +37,10 @@ const trpc = createTRPCClient<AppRouter>({
     }),
   ],
 });
+console.log("init trpc client done");
 
 async function main() {
+  console.log("start");
   const helloResponse = await trpc.greeting.hello.query({
     name: "world",
   });
