@@ -69,7 +69,7 @@ export const app = new Elysia()
   .use(
     trpc(appRouter, {
       endpoint: "/",
-      // createContext: createContext,
+      createContext: createContext,
       onError: (err) => {
         console.log(err);
       },
